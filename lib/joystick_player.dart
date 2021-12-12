@@ -1,16 +1,16 @@
 import 'package:flame/components.dart';
-import 'package:flame/geometry.dart';
 import 'package:flame_joystick_demo/joystick_example.dart';
-import 'package:flutter/material.dart';
 
-class JoystickPlayer extends SpriteComponent
-    with HasGameRef<JoystickExample>, HasHitboxes, Collidable {
+class JoystickPlayer extends SpriteComponent with HasGameRef<JoystickExample>
+// , HasHitboxes, Collidable
+{
   /// Pixels/s
   static const double maxSpeed = 700.0;
 
-  bool _isWallHit = false;
+  // bool _isWallHit = false;
 
   final JoystickComponent joystick;
+  final screenCollidable = ScreenCollidable();
 
   JoystickPlayer(this.joystick)
       : super(
@@ -21,6 +21,7 @@ class JoystickPlayer extends SpriteComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    add(screenCollidable);
     sprite = await gameRef.loadSprite('player.png');
     position = gameRef.size / 2;
 
@@ -33,27 +34,35 @@ class JoystickPlayer extends SpriteComponent
 
     // addHitbox(shape);
 
-    addHitbox(HitboxRectangle());
+    // addHitbox(HitboxRectangle());
+    //for out of screen bound
   }
 
   @override
   void update(double dt) {
-    debugPrint(
-      'isWallHit return: $_isWallHit '
-      'position: ${position.toString()}',
-    );
-
     if (!joystick.delta.isZero()) {
-
       position.add(joystick.relativeDelta * maxSpeed * dt);
       angle = joystick.delta.screenAngle();
     }
+
+    // Takes rotation into consideration (which topLeftPosition doesn't)
+    final topLeft = absoluteCenter - (scaledSize / 2);
+    if (topLeft.x + scaledSize.x < 0 ||
+        topLeft.y + scaledSize.y < 0 ||
+        topLeft.x > screenCollidable.scaledSize.x ||
+        topLeft.y > screenCollidable.scaledSize.y) {
+      debugMode = true;
+
+      final moduloSize = screenCollidable.scaledSize + scaledSize;
+
+      topLeftPosition = topLeftPosition % moduloSize;
+    }
   }
 
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
-    _isWallHit = other is ScreenCollidable;
+  // @override
+  // void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
+  //   _isWallHit = other is ScreenCollidable;
 
-    debugPrint('other: $other');
-  }
+  //   debugPrint('other: $other');
+  // }
 }

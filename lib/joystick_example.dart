@@ -22,7 +22,7 @@ class JoystickExample extends FlameGame with HasDraggables, HasCollidables {
     );
     player = JoystickPlayer(joystick);
 
-    add(ScreenCollidable());
+    // add(ScreenCollidable());
     add(player);
     add(joystick);
   }
